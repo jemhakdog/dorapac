@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.mockupName or product.name }} - Dorapac Mockups</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-bg': '#f4f1ea',
+                        'brand-text': '#1a4a38',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-gray-800 font-sans antialiased min-h-screen">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Header Section -->
+        <div class="mb-12 border-b border-gray-200 pb-6">
+            <div class="flex items-center space-x-6 text-sm font-bold text-gray-600 mb-6 tracking-wider uppercase">
+                <a href="{{ url_for('index') }}" class="text-brand-text text-xl">DORAPAC</a>
+                <a href="{{ url_for('index') }}" class="cursor-pointer hover:text-brand-text">Mockups</a>
+                <a href="{{ url_for('index') }}" class="cursor-pointer hover:text-brand-text">Dielines</a>
+            </div>
+            
+            <!-- Breadcrumbs -->
+            <div class="text-xs text-gray-500 uppercase tracking-wider">
+                <a href="{{ url_for('index') }}" class="hover:text-brand-text">Home</a> &rarr; 
+                <a href="{{ url_for('index', category=product.class2Bymodel) }}" class="hover:text-brand-text">{{ product.class2Bymodel or 'Catalog' }}</a> &rarr; 
+                <span class="font-bold text-gray-800">{{ product.mockupName or product.name }}</span>
+            </div>
+        </div>
+
+        <!-- Product Container -->
+        <div class="bg-white rounded-[20px] shadow-sm overflow-hidden flex flex-col md:flex-row">
+            
+            <!-- Image Side -->
+            <div class="w-full md:w-1/2 p-10 flex flex-col items-center bg-white border-r border-gray-100">
+                {% set all_images = [] %}
+                {% if product.image %}
+                    {% set _ = all_images.append(product.image) %}
+                {% endif %}
+                {% if product.knife and product.knife not in all_images %}
+                    {% set _ = all_images.append(product.knife) %}
+                {% endif %}
+                {% if product.cate_info %}
+                    {% if product.cate_info.image and product.cate_info.image not in all_images %}
+                        {% set _ = all_images.append(product.cate_info.image) %}
+                    {% endif %}
+                    {% if product.cate_info.size_options %}
+                        {% for size_opt in product.cate_info.size_options %}
+                            {% if size_opt.previewImgPath and size_opt.previewImgPath not in all_images %}
+                                {% set _ = all_images.append(size_opt.previewImgPath) %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+                {% if product.modeSetting %}
+                    {% for mode in product.modeSetting %}
+                        {% if mode.image and mode.image not in all_images %}
+                            {% set _ = all_images.append(mode.image) %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="flex flex-col gap-10 w-full max-h-[700px] overflow-y-auto pr-2">
+                {% for img_url in all_images %}
+                    {% set clean_url = img_url %}
+                    {% if clean_url.startswith('//') %}
+                        {% set clean_url = 'https:' + clean_url %}
+                    {% endif %}
+                    {% set img_name = clean_url.split('/')[-1] %}
+                    <div class="group relative bg-[#faf9f6] rounded-2xl p-6 flex items-center justify-center border border-gray-100 shadow-sm">
+                        <img src="{{ url_for('serve_image', num=product.num, filename=img_name) }}" alt="{{ product.mockupName }}" onerror="this.onerror=null; this.src='{{ clean_url }}';" class="max-h-[450px] object-contain w-full">
+                        
+                        <button onclick="copyImage(this, '{{ url_for('serve_image', num=product.num, filename=img_name, _external=True) }}')" 
+                                class="absolute top-4 right-4 bg-white hover:bg-gray-50 text-brand-text px-3 py-1.5 rounded-lg shadow-sm border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-bold flex items-center gap-2 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span>Copy Image</span>
+                        </button>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Details Side -->
+            <div class="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center bg-[#faf9f6]">
+                <h1 class="text-3xl md:text-5xl font-black text-brand-text uppercase tracking-tight mb-2">
+                    {{ product.mockupName or product.name }}
+                </h1>
+                
+                <div class="text-xl text-gray-500 mb-8 font-medium">ID: {{ product.num }}</div>
+                
+                <div class="space-y-6">
+                    {% if product.class2Bymodel %}
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Category</h3>
+                        <p class="text-lg font-medium text-gray-800">{{ product.class2Bymodel }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if product.format %}
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Formats</h3>
+                        <div class="flex gap-2 mt-2">
+                            {% for fmt in product.format %}
+                                <span class="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{{ fmt }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if product.tags %}
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Tags</h3>
+                        <p class="text-gray-700 leading-relaxed">{{ product.tags | join(', ') }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-12 pt-8 border-t border-gray-200">
+                    <a href="{{ url_for('index') }}" class="inline-flex items-center text-brand-text font-bold hover:underline">
+                        &larr; Back to Catalog
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        async function copyImage(btn, url) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                
+                // For ClipboardItem, image/jpeg requires special handling in some browsers, 
+                // but generally PNGs work perfectly. We'll attempt to copy whatever the blob type is.
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                
+                const span = btn.querySelector('span');
+                const originalText = span.innerText;
+                span.innerText = 'Copied!';
+                btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+                
+                setTimeout(() => {
+                    span.innerText = originalText;
+                    btn.classList.remove('bg-green-50', 'text-green-700', 'border-green-200');
+                }, 2000);
+            } catch (err) {
+                console.error('Could not copy image: ', err);
+                alert('Could not copy image to clipboard. Your browser might not support copying this image type directly.');
+            }
+        }
+    </script>
+</body>
+</html>

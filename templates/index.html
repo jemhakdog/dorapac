@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dorapac Data Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-bg': '#f4f1ea',
+                        'brand-text': '#1a4a38',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-gray-800 font-sans antialiased">
+
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row gap-10">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-56 lg:w-64 flex-shrink-0 md:pt-16">
+            
+            <!-- Search Bar -->
+            <div class="mb-8">
+                <form action="{{ url_for('index') }}" method="GET" class="relative">
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search mockups..." class="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-full focus:ring-brand-text focus:border-brand-text block pl-10 p-2.5 outline-none shadow-sm transition-shadow hover:shadow">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                        </svg>
+                    </div>
+                </form>
+            </div>
+            
+            <h2 class="text-xl font-black text-brand-text uppercase tracking-tight mb-6 border-b border-gray-200 pb-2">Categories</h2>
+            <ul class="space-y-3.5 text-sm font-medium text-gray-600">
+                <li>
+                    <a href="{{ url_for('index', q=search_query, type=view_type) }}" class="cursor-pointer hover:text-brand-text {% if not selected_category %}text-brand-text font-bold{% endif %} flex justify-between items-center">
+                        <span>All Mockups</span>
+                        <span class="text-xs bg-gray-200 text-gray-700 py-0.5 px-2 rounded-full">{{ total_items }}</span>
+                    </a>
+                </li>
+                {% for parent, children in grouped_categories.items() %}
+                <li>
+                    {% set is_parent_active = selected_parent_category == parent or selected_category in children %}
+                    <details {% if is_parent_active %}open{% endif %} class="group">
+                        <summary class="cursor-pointer hover:text-brand-text flex justify-between items-center list-none [&::-webkit-details-marker]:hidden {% if is_parent_active %}text-brand-text font-bold{% endif %} py-1">
+                            <div class="flex items-center space-x-2 w-full">
+                                <span>{{ parent }}</span>
+                                <svg class="w-4 h-4 ml-auto transition-transform group-open:rotate-180 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </summary>
+                        <ul class="mt-2 ml-2 space-y-2 border-l border-gray-200 pl-4 py-1">
+                            {% for cat, count in children.items() %}
+                            <li>
+                                <a href="{{ url_for('index', category=cat, parent_category=parent, q=search_query, type=view_type) }}" class="cursor-pointer hover:text-brand-text {% if selected_category == cat %}text-brand-text font-bold{% endif %} flex justify-between items-center">
+                                    <span>{{ cat }}</span>
+                                    <span class="text-xs bg-gray-200 text-gray-700 py-0.5 px-2 rounded-full">{{ count }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                </li>
+                {% endfor %}
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            
+            <!-- Header Section -->
+            <div class="mb-10">
+                <!-- Top Navigation Placeholder -->
+                <div class="flex items-center space-x-6 text-sm font-bold text-gray-600 mb-6 tracking-wider uppercase">
+                    <a href="{{ url_for('index') }}" class="text-brand-text text-xl">DORAPAC</a>
+                    <a href="{{ url_for('index', type='mockups', category=selected_category, q=search_query) }}" class="cursor-pointer transition hover:text-brand-text {% if view_type == 'mockups' %}text-brand-text border-b-2 border-brand-text pb-1{% endif %}">Mockups</a>
+                    <a href="{{ url_for('index', type='dielines', category=selected_category, q=search_query) }}" class="cursor-pointer transition hover:text-brand-text {% if view_type == 'dielines' %}text-brand-text border-b-2 border-brand-text pb-1{% endif %}">Dielines</a>
+                </div>
+                
+                <!-- Breadcrumbs -->
+                <div class="text-xs text-gray-500 mb-4 uppercase tracking-wider">
+                    Home &rarr; Catalog &rarr; <span class="font-bold text-gray-800">Mockups</span>
+                </div>
+
+                <!-- Title & Description -->
+                <h1 class="text-5xl md:text-7xl font-black text-brand-text uppercase tracking-tight mb-4">
+                    MOCKUPS
+                </h1>
+                <p class="text-gray-600 text-lg max-w-3xl mb-8 leading-relaxed">
+                    Discover our extensive collection of high-quality packaging mockups. Designed for professionals, our dielines and templates help you visualize your perfect product packaging securely and efficiently.
+                </p>
+                
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-4">
+                    <select class="bg-white border border-gray-200 rounded-md px-4 py-2 text-sm font-medium text-gray-700 shadow-sm outline-none cursor-pointer appearance-none pr-8 relative">
+                        <option>All Styles</option>
+                    </select>
+                    <select class="bg-white border border-gray-200 rounded-md px-4 py-2 text-sm font-medium text-gray-700 shadow-sm outline-none cursor-pointer appearance-none pr-8">
+                        <option>Sort By: Default</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Grid Section -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+                {% for item in items %}
+                <a href="{{ url_for('product', num=item.num) }}" class="group block cursor-pointer">
+                    <!-- Image Container -->
+                    <div class="bg-white rounded-[20px] p-6 h-[260px] flex items-center justify-center shadow-sm transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md mb-4">
+                        {% set img_url = '' %}
+                        {% if view_type == 'dielines' and item.knife %}
+                            {% set img_url = item.knife %}
+                        {% elif item.image %}
+                            {% set img_url = item.image %}
+                        {% endif %}
+                        
+                        {% if img_url %}
+                            {% if img_url.startswith('//') %}
+                                {% set img_url = 'https:' + img_url %}
+                            {% endif %}
+                            {% set img_name = img_url.split('/')[-1] %}
+                            <img src="{{ url_for('serve_image', num=item.num, filename=img_name) }}" alt="{{ item.mockupName }}" onerror="this.onerror=null; this.src='{{ img_url }}';" class="max-h-full max-w-full object-contain">
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <div>
+                        <h3 class="text-[15px] font-medium text-gray-800 leading-tight mb-1 truncate" title="{{ item.mockupName }}">{{ item.mockupName or item.name }}</h3>
+                        
+                        <!-- Info -->
+                        <div class="flex flex-col mt-2 text-sm">
+                            <span class="text-gray-500 mb-1">ID: {{ item.num }}</span>
+                            <span class="font-bold text-gray-900">{{ item.class2Bymodel or 'Packaging' }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination Section -->
+            {% if total_pages > 1 %}
+            <div class="mt-12 flex justify-center">
+                <div class="inline-flex items-center space-x-1 bg-gray-50/80 backdrop-blur-sm rounded-full px-2 py-1.5 border border-gray-200/60 shadow-sm">
+                    <!-- Prev -->
+                    {% if page > 1 %}
+                    <a href="{{ url_for('index', category=selected_category, page=page-1, q=search_query, type=view_type) }}" class="p-2 text-gray-600 hover:text-gray-900 transition mr-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    </a>
+                    {% else %}
+                    <div class="p-2 text-gray-300 mr-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Page Numbers -->
+                    {% for p in page_window %}
+                        {% if p %}
+                            {% if p == page %}
+                                <span class="w-8 h-8 flex items-center justify-center bg-brand-text text-white rounded-full font-bold text-sm shadow-sm">{{ p }}</span>
+                            {% else %}
+                                <a href="{{ url_for('index', category=selected_category, page=p, q=search_query, type=view_type) }}" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-full font-medium text-sm transition">{{ p }}</a>
+                            {% endif %}
+                        {% else %}
+                            <span class="w-8 h-8 flex items-center justify-center text-gray-400 font-bold text-sm tracking-widest px-1">...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Next -->
+                    {% if page < total_pages %}
+                    <a href="{{ url_for('index', category=selected_category, page=page+1, q=search_query, type=view_type) }}" class="p-2 text-gray-600 hover:text-gray-900 transition ml-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                    {% else %}
+                    <div class="p-2 text-gray-300 ml-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+        </div>
+    </div>
+
+</body>
+</html>
